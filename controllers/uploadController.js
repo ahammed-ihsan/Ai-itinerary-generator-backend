@@ -6,30 +6,36 @@ const { generateItinerary } = require('../services/aiService');
 
 exports.uploadDocuments = async (req, res) => {
 
-  const files = req.files;
-  if(!files){
-    return res.status(400).json({ message: "No files uploaded" });
-  }
+    try {
 
-  let extractedText = "";
+        const files = req.files;
+        if (!files) {
+            return res.status(400).json({ message: "No files uploaded" });
+        }
 
-  for (const file of files) {
+        let extractedText = "";
 
-    if (file.mimetype === "application/pdf") {
-      extractedText += await extractPDFText(file.path);
-    } else {
-      extractedText += await extractImageText(file.path);
+        for (const file of files) {
+
+            if (file.mimetype === "application/pdf") {
+                extractedText += await extractPDFText(file.path);
+            } else {
+                extractedText += await extractImageText(file.path);
+            }
+        }
+
+        const structuredData = await extractStructuredData(extractedText);
+
+        const itinerary = await generateItinerary(structuredData);
+
+        const saved = await Itinerary.create({
+            user: req.user.id,
+            itinerary
+        });
+
+        res.json(saved);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
-  }
-
-  const structuredData = await extractStructuredData(extractedText);
-
-  const itinerary = await generateItinerary(structuredData);
-
-  const saved = await Itinerary.create({
-    user: req.user.id,
-    itinerary
-  });
-
-  res.json(saved);
 };
