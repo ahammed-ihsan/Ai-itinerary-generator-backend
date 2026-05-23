@@ -8,7 +8,7 @@ exports.uploadDocuments = async (req, res) => {
 
     try {
 
-        const files = req.files;
+        const files = req.files;console.log("Uploaded files:", files);
         if (!files) {
             return res.status(400).json({ message: "No files uploaded" });
         }
@@ -18,9 +18,9 @@ exports.uploadDocuments = async (req, res) => {
         for (const file of files) {
 
             if (file.mimetype === "application/pdf") {
-                extractedText += await extractPDFText(file.path);
+                extractedText += await extractPDFText(file.buffer);
             } else {
-                extractedText += await extractImageText(file.path);
+                extractedText += await extractImageText(file.buffer);
             }
         }
 
